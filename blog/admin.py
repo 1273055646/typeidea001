@@ -1,10 +1,12 @@
 from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
-from typeidea.custom_site import custom_site
+from django.contrib.admin.models import LogEntry
 
 from .adminforms import PostAdminForm
 from .models import Post, Category, Tag
+from typeidea.custom_site import custom_site
+from typeidea.base_admin import BaseOwnerAdmin
 
 
 class PostInline(admin.TabularInline):
@@ -14,15 +16,11 @@ class PostInline(admin.TabularInline):
     model = Post   # 与Post关联
 
 
-@admin.register(Category)
-class CategoryAdmin(admin.ModelAdmin):
+@admin.register(Category, site=custom_site)
+class CategoryAdmin(BaseOwnerAdmin):
     inlines = [PostInline]   # 这个属性是一个列表，包含了要在Category编辑页面上显示的内联模型类。
     list_display = ('name', 'status', 'is_nav', 'owner', 'created_time', 'post_count')  # 页面上显示的字段
     fields = ('name', 'status', 'is_nav')  # 增加时显示的字段
-
-    def save_model(self, request, obj, form, change):
-        obj.owner = request.user  # 当前已经登录的用户作为作者
-        return super().save_model(request, obj, form, change)
 
     def post_count(self, obj):
         """ 统计文章数量 """
@@ -31,14 +29,10 @@ class CategoryAdmin(admin.ModelAdmin):
     post_count.short_description = '文章数量'
 
 
-@admin.register(Tag)
-class TagAdmin(admin.ModelAdmin):
+@admin.register(Tag, site=custom_site)
+class TagAdmin(BaseOwnerAdmin):
     list_display = ('name', 'status', 'owner', 'created_time')
     fields = ('name', 'status')
-
-    def save_model(self, request, obj, form, change):
-        obj.owner = request.user
-        return super().save_model(request, obj, form, change)
 
 
 class CategoryOwnerFilter(admin.SimpleListFilter):
@@ -62,7 +56,7 @@ class CategoryOwnerFilter(admin.SimpleListFilter):
 
 
 @admin.register(Post, site=custom_site)
-class PostAdmin(admin.ModelAdmin):
+class PostAdmin(BaseOwnerAdmin):
     form = PostAdminForm  # 显示摘要改为Textarea组件
     list_display = ['title', 'category', 'status', 'created_time', 'owner', 'operator']
     list_display_links = []
@@ -78,15 +72,18 @@ class PostAdmin(admin.ModelAdmin):
 
     exclude = ('owner',)  # 必须这么写，因为The value of 'exclude' must be a list or tuple.
 
-    # fields = (
-    #     ('category', 'title'),
-    #     'desc',
-    #     'status',
-    #     'content',
-    #     'tag',
-    # )
+    """
+    fields = (
+        ('category', 'title'),
+        'desc',
+        'status',
+        'content',
+        'tag',
+    )
 
-    # 上面和下面两种方法效果类似, 变动的地方都是在新增页面中显示，下面信息更全
+    上面和下面两种方法效果类似, 变动的地方都是在新增页面中显示，下面信息更全
+    
+    """
 
     fieldsets = (
         ('基础配置', {
@@ -121,18 +118,6 @@ class PostAdmin(admin.ModelAdmin):
 
     operator.short_description = '操作'
 
-    def save_model(self, request, obj, form, change):
-        obj.owner = request.user
-        return super().save_model(request, obj, form, change)
-
-    def get_queryset(self, request):
-        """ 用户只能看到自己创建的文章 """
-        qs = super().get_queryset(request)
-        # <QuerySet [<Post: Post object (6)>, <Post: Post object (5)>, ...]>
-        # 可以取qs.values('id', 'title')
-        # print(qs)
-        return qs.filter(owner=request.user)
-
     # class Media:
     #     css = {
     #         'all': ("https://cdn.staticfile.org/twitter-bootstrap/5.3.0/css/bootstrap.min.css",),
@@ -141,4 +126,6 @@ class PostAdmin(admin.ModelAdmin):
     #     js = ('https://cdn.staticfile.org/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js',)
 
 
-
+@admin.register(LogEntry, site=custom_site)
+class LogEntryAdmin(admin.ModelAdmin):
+    list_display = ['object_repr', 'object_id', 'action_flag', 'user', 'change_message']
