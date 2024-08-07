@@ -1,12 +1,22 @@
 from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
+from typeidea.custom_site import custom_site
 
+from .adminforms import PostAdminForm
 from .models import Post, Category, Tag
+
+
+class PostInline(admin.TabularInline):
+    # 在分类的增加页面中可以对文章进行编辑
+    fields = ('title', 'desc')  # 定义了在内联表单中要显示的字段（对文章中的标题和摘要进行编辑）
+    extra = 1   # 控制额外多个
+    model = Post   # 与Post关联
 
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
+    inlines = [PostInline]   # 这个属性是一个列表，包含了要在Category编辑页面上显示的内联模型类。
     list_display = ('name', 'status', 'is_nav', 'owner', 'created_time', 'post_count')  # 页面上显示的字段
     fields = ('name', 'status', 'is_nav')  # 增加时显示的字段
 
@@ -51,8 +61,9 @@ class CategoryOwnerFilter(admin.SimpleListFilter):
         return queryset
 
 
-@admin.register(Post)
+@admin.register(Post, site=custom_site)
 class PostAdmin(admin.ModelAdmin):
+    form = PostAdminForm  # 显示摘要改为Textarea组件
     list_display = ['title', 'category', 'status', 'created_time', 'owner', 'operator']
     list_display_links = []
 
@@ -65,7 +76,7 @@ class PostAdmin(admin.ModelAdmin):
     # 编辑页面
     save_on_top = True
 
-    exclude = ('owner',)
+    exclude = ('owner',)  # 必须这么写，因为The value of 'exclude' must be a list or tuple.
 
     # fields = (
     #     ('category', 'title'),
@@ -75,7 +86,7 @@ class PostAdmin(admin.ModelAdmin):
     #     'tag',
     # )
 
-    """上面和下面两种方法效果类似, 变动的地方都是在新增页面中显示，下面信息更全"""
+    # 上面和下面两种方法效果类似, 变动的地方都是在新增页面中显示，下面信息更全
 
     fieldsets = (
         ('基础配置', {
@@ -99,13 +110,13 @@ class PostAdmin(admin.ModelAdmin):
         }),
     )
     # filter_horizontal = ('tag', )  # 横向展示
-    filter_vertical = ('tag', )      # 纵向展示
+    filter_vertical = ('tag',)  # 纵向展示
 
     def operator(self, obj):
         """ 新增编辑按钮 """
         return format_html(
             '<a href="{}">编辑</a>',
-            reverse('admin:blog_post_change', args=[obj.id])
+            reverse('cus_admin:blog_post_change', args=[obj.id])
         )
 
     operator.short_description = '操作'
@@ -121,4 +132,13 @@ class PostAdmin(admin.ModelAdmin):
         # 可以取qs.values('id', 'title')
         # print(qs)
         return qs.filter(owner=request.user)
-    
+
+    # class Media:
+    #     css = {
+    #         'all': ("https://cdn.staticfile.org/twitter-bootstrap/5.3.0/css/bootstrap.min.css",),
+    #
+    #     }
+    #     js = ('https://cdn.staticfile.org/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js',)
+
+
+
