@@ -17,11 +17,27 @@ from django.conf.urls import url
 from django.contrib import admin
 from django.urls import include, re_path, path
 
+from blog.views import post_list, post_detail
+from config.views import links
 from .custom_site import custom_site
 
 urlpatterns = [
-    # re_path(r'^super_admin/', admin.site.urls),
-    # re_path(r'^admin/', include(custom_site.urls)),
-    url(r'^super_admin/', admin.site.urls),
-    url(r'^admin/', custom_site.urls),
+    # url(r'^$', post_list),
+    # url(r'^category/(?P<category_id>\d+)$', post_list),
+    # url(r'^tag/(?P<tag_id>\d+)$', post_list),
+    # url(r'^post/(?P<post_id>\d+)$', post_detail),
+    # url(r'^links/$', links),
+    # # re_path(r'^super_admin/', admin.site.urls),
+    # # re_path(r'^admin/', include(custom_site.urls)),
+    # url(r'^super_admin/', admin.site.urls),
+    # url(r'^admin/', custom_site.urls),
+
+    path('', post_list, name='post_list'),
+    path('category/<int:category_id>/', post_list, name='category_post_list'),
+    path('tag/<int:tag_id>/', post_list, name='tag_post_list'),
+    path('post/<int:post_id>/', post_detail, name='post_detail'),
+    path('links/', links, name='links'),
+
+    path('super_admin/', admin.site.urls),
+    path('admin/', custom_site.urls),
 ]
