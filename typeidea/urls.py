@@ -38,6 +38,6 @@ urlpatterns = [
     path('post/<int:post_id>/', post_detail, name='post_detail'),
     path('links/', links, name='links'),
 
-    path('super_admin/', admin.site.urls),
-    path('admin/', custom_site.urls),
+    path('super_admin/', admin.site.urls, name='super_admin'),
+    path('admin/', custom_site.urls, name='admin'),
 ]
