@@ -13,13 +13,12 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.conf.urls import url
 from django.contrib import admin
-from django.urls import include, re_path, path
+from django.urls import path
 
-from blog.views import post_list, post_detail
 from config.views import links
 from .custom_site import custom_site
+from blog.views import IndexView, CategoryView, TagView, PostDetailView
 
 urlpatterns = [
     # url(r'^$', post_list),
@@ -32,12 +31,12 @@ urlpatterns = [
     # url(r'^super_admin/', admin.site.urls),
     # url(r'^admin/', custom_site.urls),
 
-    path('', post_list, name='post_list'),
-    path('category/<int:category_id>/', post_list, name='category_post_list'),
-    path('tag/<int:tag_id>/', post_list, name='tag_post_list'),
-    path('post/<int:post_id>/', post_detail, name='post_detail'),
+    path('', IndexView.as_view(), name='index'),
+    path('category/<int:category_id>/', CategoryView.as_view(), name='category-list'),
+    path('tag/<int:tag_id>/', TagView.as_view(), name='tag-list'),
+    path('post/<int:post_id>/', PostDetailView.as_view(), name='post-detail'),
     path('links/', links, name='links'),
 
-    path('super_admin/', admin.site.urls, name='super_admin'),
+    path('super_admin/', admin.site.urls, name='super-admin'),
     path('admin/', custom_site.urls, name='admin'),
 ]
