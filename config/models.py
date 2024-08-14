@@ -77,12 +77,13 @@ class SideBar(models.Model):
                 'posts': Post.hot_posts()
             }
             result = render_to_string('config/sidebar_posts.html', context)
-        elif self.display_type == self.DISPLAY_COMMENT:
+        elif self.display_type == self.DISPLAY_COMMENT:   # 通过Comment中的外键来获取侧边栏中的文章
             context = {
                 'comments': Comment.objects.filter(status=Comment.STATUS_NORMAL)
             }
             result = render_to_string('config/sidebar_comments.html', context)
         return result
+
 
 
 
