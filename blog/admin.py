@@ -1,7 +1,10 @@
+from __future__ import unicode_literals
+
 from django.contrib import admin
+from django.contrib.admin.models import LogEntry
 from django.urls import reverse
 from django.utils.html import format_html
-from django.contrib.admin.models import LogEntry
+
 
 from .adminforms import PostAdminForm
 from .models import Post, Category, Tag
@@ -18,12 +21,11 @@ class PostInline(admin.TabularInline):
 
 @admin.register(Category, site=custom_site)
 class CategoryAdmin(BaseOwnerAdmin):
-    inlines = [PostInline]   # 这个属性是一个列表，包含了要在Category编辑页面上显示的内联模型类。
+    inlines = [PostInline, ]   # 这个属性是一个列表，包含了要在Category编辑页面上显示的内联模型类。
     list_display = ('name', 'status', 'is_nav', 'owner', 'created_time', 'post_count')  # 页面上显示的字段
     fields = ('name', 'status', 'is_nav')  # 增加时显示的字段
 
     def post_count(self, obj):
-        """ 统计文章数量 """
         return obj.post_set.count()
 
     post_count.short_description = '文章数量'
@@ -51,7 +53,7 @@ class CategoryOwnerFilter(admin.SimpleListFilter):
         # 6          (显示id)
         category_id = self.value()
         if category_id:
-            return queryset.filter(category__id=category_id)
+            return queryset.filter(category_id=self.value()) # 原来是category_id=category_id
         return queryset
 
 
@@ -61,7 +63,7 @@ class PostAdmin(BaseOwnerAdmin):
     list_display = ['title', 'category', 'status', 'created_time', 'owner', 'operator']
     list_display_links = []
 
-    list_filter = [CategoryOwnerFilter]
+    list_filter = [CategoryOwnerFilter, ]
     search_fields = ['title', 'category__name']
 
     actions_on_top = True
@@ -70,8 +72,7 @@ class PostAdmin(BaseOwnerAdmin):
     # 编辑页面
     save_on_top = True
 
-    exclude = ('owner',)  # 必须这么写，因为The value of 'exclude' must be a list or tuple.
-
+    exclude = ['owner']
     """
     fields = (
         ('category', 'title'),
@@ -100,7 +101,7 @@ class PostAdmin(BaseOwnerAdmin):
             ),
         }),
         ('额外信息', {
-            'classes': ('collapse',),  # 这是一个元组，包含一个CSS类名，用于折叠该部分
+            'classes': ('wide',),  # 这是一个元组，包含一个CSS类名，用于折叠该部分
             'fields': (
                 'tag',  # 字段名，单独显示在一行（在折叠部分）
             ),
@@ -113,17 +114,10 @@ class PostAdmin(BaseOwnerAdmin):
         """ 新增编辑按钮 """
         return format_html(
             '<a href="{}">编辑</a>',
-            reverse('cus_admin:blog_post_change', args=[obj.id])
+            reverse('cus_admin:blog_post_change', args=(obj.id,))
         )
 
     operator.short_description = '操作'
-
-    # class Media:
-    #     css = {
-    #         'all': ("https://cdn.staticfile.org/twitter-bootstrap/5.3.0/css/bootstrap.min.css",),
-    #
-    #     }
-    #     js = ('https://cdn.staticfile.org/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js',)
 
 
 @admin.register(LogEntry, site=custom_site)

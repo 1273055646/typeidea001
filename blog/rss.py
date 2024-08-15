@@ -28,7 +28,7 @@ class LatestPostFeed(Feed):
         return item.desc
 
     def item_link(self, item):
-        return reverse('post-detail', args=[item.id])
+        return reverse('post-detail', args=[item.pk])
 
     def item_extra_kwargs(self, item):
         return {'content_html': self.item_content_html(item)}

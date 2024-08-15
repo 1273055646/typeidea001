@@ -24,7 +24,7 @@ class Category(models.Model):
 
     @classmethod
     def get_navs(cls):
-        categories = Category.objects.filter(status=cls.STATUS_NORMAL)
+        categories = cls.objects.filter(status=cls.STATUS_NORMAL)   # 原来是Category.objects.filter
         nav_categories = []
         normal_categories = []
         for cate in categories:
