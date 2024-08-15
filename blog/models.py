@@ -1,3 +1,6 @@
+from functools import cached_property
+
+import mistune
 from django.contrib.auth.models import User
 from django.db import models
 
@@ -66,7 +69,7 @@ class Post(models.Model):
     STATUS_ITEMS = (
         (STATUS_NORMAL, '正常'),
         (STATUS_DELETE, '删除'),
-        (STATUS_DRAFT, '草稿')
+        (STATUS_DRAFT, '草稿'),
     )
 
     pv = models.PositiveIntegerField(default=1)
@@ -79,10 +82,15 @@ class Post(models.Model):
     tag = models.ManyToManyField(Tag, verbose_name='标签')
     owner = models.ForeignKey(User, verbose_name='作者', on_delete=models.CASCADE)
     created_time = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
+    content_html = models.TextField(verbose_name='正文html代码', blank=True, editable=False)
 
     class Meta:
         verbose_name = verbose_name_plural = '文章'
         ordering = ['-id']
+
+    def save(self, *args, **kwargs):   # 将content_html中的内容与content同步
+        self.content_html = mistune.markdown(self.content)
+        super().save(*args, **kwargs)
 
     @staticmethod
     def get_by_tag(tag_id):
@@ -117,17 +125,9 @@ class Post(models.Model):
     def hot_posts(cls):
         return cls.objects.filter(status=cls.STATUS_NORMAL).order_by('-pv')
 
-
-
-
-
-
-
-
-
-
-
-
+    @cached_property
+    def tags(self):
+        return ','.join(self.tag.values_list('name', flat=True))
 
 
 
